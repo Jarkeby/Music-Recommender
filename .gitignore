@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+.venv/
+.ipynb_checkpoints/
+data/raw/*
+data/processed/*
+results/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+!results/.gitkeep
+# keep results that the README and deployed app reference
+!results/*.csv
+!results/figures/
+!app/data/

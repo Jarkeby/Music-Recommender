@@ -1,0 +1,13 @@
+numpy
+pandas
+scipy
+scikit-learn
+pyarrow
+implicit
+matplotlib
+streamlit
+streamlit-searchbox
+pytest
+# Only needed when pulling data from BigQuery:
+google-cloud-bigquery
+db-dtypes
