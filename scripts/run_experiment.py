@@ -19,26 +19,11 @@ import pandas as pd  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from recsys.data import build_dataset, filter_sparse, load_listens, time_split  # noqa: E402
-from recsys.metrics import per_user_scores, sample_users  # noqa: E402
+from recsys.metrics import activity_breakdown, per_user_scores, sample_users, summary_row  # noqa: E402
 from recsys.models import (ALSRecommender, BPRRecommender, ItemKNNRecommender,  # noqa: E402
                            PopularityRecommender)
 
 MODEL_COLORS = {"popularity": "#2a78d6", "item_knn": "#eb6834", "als": "#1baf7a", "bpr": "#eda100"}
-
-
-def activity_breakdown(per_user: pd.DataFrame, train_matrix, k: int) -> pd.DataFrame:
-    """Mean recall/NDCG per model within user-activity quartiles (distinct tracks in train)."""
-    activity = np.diff(train_matrix.indptr)  # distinct tracks per user in train
-    per_user = per_user.assign(activity=activity[per_user.user_idx.to_numpy()])
-    users = per_user.drop_duplicates("user_idx")
-    edges = np.unique(np.quantile(users.activity, [0, .25, .5, .75, 1]))
-    # pd.cut bins are right-inclusive, so every bucket after the first starts at lo + 1
-    labels = [f"{int(lo) + (i > 0)}-{int(hi)}" for i, (lo, hi) in enumerate(zip(edges[:-1], edges[1:]))]
-    per_user["activity_bucket"] = pd.cut(per_user.activity, edges, labels=labels, include_lowest=True)
-    out = (per_user.groupby(["activity_bucket", "model"], observed=True)
-           .agg(**{f"recall@{k}": ("recall", "mean"), f"ndcg@{k}": ("ndcg", "mean"), "n_users": ("user_idx", "size")})
-           .reset_index())
-    return out
 
 
 def plot_breakdown(table: pd.DataFrame, k: int, path: str):
@@ -109,8 +94,7 @@ def main():
         m.fit(datasets[alpha].train_matrix)
         scores = per_user_scores(m, ds.test_items, args.k, users).assign(model=m.name)
         per_user.append(scores)
-        row = {"model": m.name, f"recall@{args.k}": scores.recall.mean(), f"ndcg@{args.k}": scores.ndcg.mean(),
-               "n_users": len(scores)}
+        row = summary_row(scores, args.k, model=m.name)
         results.append(row)
         print(f"{m.name:12s} recall@{args.k}={row[f'recall@{args.k}']:.4f}  ndcg@{args.k}={row[f'ndcg@{args.k}']:.4f}")
 

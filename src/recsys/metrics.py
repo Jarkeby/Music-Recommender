@@ -43,8 +43,29 @@ def per_user_scores(recommender, test_items: dict, k: int = 20, users=None, batc
     })
 
 
+def summary_row(scores: pd.DataFrame, k: int, **extra) -> dict:
+    """One results-table row (mean recall/NDCG over users) from per_user_scores output."""
+    return {**extra, f"recall@{k}": scores.recall.mean(), f"ndcg@{k}": scores.ndcg.mean(), "n_users": len(scores)}
+
+
+def activity_breakdown(per_user: pd.DataFrame, train_matrix, k: int) -> pd.DataFrame:
+    """Mean recall/NDCG per model within user-activity quartiles (distinct tracks in train).
+
+    per_user: per_user_scores output for all models stacked, with a `model` column.
+    """
+    activity = np.diff(train_matrix.indptr)  # distinct tracks per user in train
+    per_user = per_user.assign(activity=activity[per_user.user_idx.to_numpy()])
+    users = per_user.drop_duplicates("user_idx")
+    edges = np.unique(np.quantile(users.activity, [0, .25, .5, .75, 1]))
+    # pd.cut bins are right-inclusive, so every bucket after the first starts at lo + 1
+    labels = [f"{int(lo) + (i > 0)}-{int(hi)}" for i, (lo, hi) in enumerate(zip(edges[:-1], edges[1:]))]
+    per_user["activity_bucket"] = pd.cut(per_user.activity, edges, labels=labels, include_lowest=True)
+    return (per_user.groupby(["activity_bucket", "model"], observed=True)
+            .agg(**{f"recall@{k}": ("recall", "mean"), f"ndcg@{k}": ("ndcg", "mean"), "n_users": ("user_idx", "size")})
+            .reset_index())
+
+
 def evaluate(recommender, test_items: dict, k: int = 20, max_users: int | None = None) -> dict:
     """Average recall@k and NDCG@k over users with test items."""
     scores = per_user_scores(recommender, test_items, k, sample_users(test_items, max_users))
-    return {f"recall@{k}": float(scores.recall.mean()), f"ndcg@{k}": float(scores.ndcg.mean()),
-            "n_users": len(scores)}
+    return summary_row(scores, k)

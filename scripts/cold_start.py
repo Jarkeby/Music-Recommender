@@ -20,7 +20,7 @@ import scipy.sparse as sp  # noqa: E402
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from recsys.content import ContentRecommender, TagToALSRecommender, build_tag_matrix  # noqa: E402
 from recsys.data import build_dataset, filter_sparse, load_listens, time_split  # noqa: E402
-from recsys.metrics import per_user_scores, sample_users  # noqa: E402
+from recsys.metrics import per_user_scores, sample_users, summary_row  # noqa: E402
 from recsys.models import ALSRecommender  # noqa: E402
 
 
@@ -87,8 +87,7 @@ def main():
     results = []
     for m in models:
         scores = per_user_scores(m.fit(train_warm), test_cold, args.k, users)
-        row = {"model": m.name, f"recall@{args.k}": scores.recall.mean(), f"ndcg@{args.k}": scores.ndcg.mean(),
-               "n_users": len(scores)}
+        row = summary_row(scores, args.k, model=m.name)
         results.append(row)
         print(f"{m.name:11s} recall@{args.k}={row[f'recall@{args.k}']:.4f}  ndcg@{args.k}={row[f'ndcg@{args.k}']:.4f}")
 

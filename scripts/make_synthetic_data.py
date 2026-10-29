@@ -2,7 +2,7 @@
 
 Users belong to hidden taste clusters; each cluster prefers a subset of tracks, plus a
 global popularity skew. A decent model should beat the popularity baseline on this.
-    python scripts/make_synthetic_data.py
+    python scripts/make_synthetic_data.py   # writes data/raw/synthetic.parquet; pass --data to the scripts
 """
 import argparse
 from pathlib import Path
@@ -16,7 +16,7 @@ def main():
     p.add_argument("--tracks", type=int, default=2000)
     p.add_argument("--clusters", type=int, default=15)
     p.add_argument("--listens_per_user", type=int, default=60)
-    p.add_argument("--out", default="data/raw/listens.parquet")
+    p.add_argument("--out", default="data/raw/synthetic.parquet")
     p.add_argument("--seed", type=int, default=0)
     args = p.parse_args()
 

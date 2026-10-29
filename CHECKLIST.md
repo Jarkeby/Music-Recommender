@@ -20,6 +20,6 @@
 
 ## Week 4: ship it
 - [x] Improve the Streamlit app (show artist/title, not raw IDs)
-- [ ] Deploy (Streamlit Community Cloud is free) -> deploy-ready (app/data, app/requirements.txt); you still need to push to GitHub + click deploy, see README "Deploy"
+- [x] Deploy (Streamlit Community Cloud is free)
 - [x] Fill in README with real numbers + charts
 - [x] Write resume bullets with your actual metrics (RESUME.md)

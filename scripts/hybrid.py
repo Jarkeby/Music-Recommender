@@ -18,9 +18,8 @@ import pandas as pd  # noqa: E402
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from recsys.content import ContentRecommender, HybridRecommender, build_tag_matrix  # noqa: E402
 from recsys.data import build_dataset, filter_sparse, load_listens, time_split  # noqa: E402
-from recsys.metrics import per_user_scores, sample_users  # noqa: E402
+from recsys.metrics import activity_breakdown, per_user_scores, sample_users, summary_row  # noqa: E402
 from recsys.models import ALSRecommender  # noqa: E402
-from run_experiment import activity_breakdown  # noqa: E402
 
 
 def fit_models(train, test, tags, args):
@@ -32,9 +31,7 @@ def fit_models(train, test, tags, args):
 
 def score_row(model, ds, users, k, **extra):
     scores = per_user_scores(model, ds.test_items, k, users).assign(model=model.name)
-    row = {"model": model.name, **extra, f"recall@{k}": scores.recall.mean(), f"ndcg@{k}": scores.ndcg.mean(),
-           "n_users": len(scores)}
-    return row, scores
+    return summary_row(scores, k, model=model.name, **extra), scores
 
 
 def main():

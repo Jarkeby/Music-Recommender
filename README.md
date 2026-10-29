@@ -3,7 +3,7 @@
 > A recommender built on open ListenBrainz listening data: tuned ALS reaches **0.066 NDCG@20, ~26x a popularity baseline**,
 > and a tag-based cold-start model recovers brand-new tracks with **37x the recall of random**.
 
-**Demo:** _(add your Streamlit Community Cloud URL here after deploying; see "Deploy" below)_
+**Demo:** https://music-recommender-jarkeby.streamlit.app/
 
 ## Problem
 Given a user's listening history, recommend tracks they haven't heard yet and are likely to play.
@@ -108,13 +108,6 @@ _EDA numbers are from the first 14-day pull (30 Sep - 16 Oct); the shape is the 
   tracks understates real quality); the demo is item-to-item (no personalised user vectors); tags come from
   MusicBrainz/Last.fm, so obscure tracks can be untagged.
 
-## Deploy (Streamlit Community Cloud)
-The repo ships a slim copy of the model in `app/data/` (int8-quantized ALS embeddings, ~98 MB in two shards; regenerate with
-`python scripts/make_deploy_artifacts.py`) and `app/requirements.txt` (no `implicit`, which the app doesn't need).
-1. Push this folder to a public GitHub repo.
-2. Go to share.streamlit.io -> New app -> pick the repo, branch `main`, main file `app/streamlit_app.py`.
-3. Paste the resulting URL at the top of this README.
-
 ## Run it
 ```bash
 python -m venv .venv && source .venv/bin/activate   # Windows: py -3.12 -m venv .venv; .venv\Scripts\activate
@@ -122,13 +115,11 @@ pip install -r requirements.txt
 
 # 1. Try the pipeline immediately on fake data
 python scripts/make_synthetic_data.py
-python scripts/run_experiment.py --save-artifacts
+python scripts/run_experiment.py --data data/raw/synthetic.parquet --min-user 5 --min-track 5
 
 # 2. Real data: download the last 14 days of ListenBrainz dumps (~2.4 GB, no account needed)
 python scripts/pull_from_dumps.py --days 14
 python scripts/run_experiment.py --save-artifacts
-#    (alternative, if a BigQuery table is available: edit sql/pull_sample.sql, then
-#     python scripts/pull_from_bigquery.py --project YOUR_GCP_PROJECT)
 
 # Hyperparameter search on a validation split (appends to results/tuning_log.csv)
 python scripts/tune.py
@@ -144,17 +135,3 @@ streamlit run app/streamlit_app.py
 # Tests
 pytest
 ```
-
-## Project structure
-```
-src/recsys/   data.py (load/filter/split/matrix) | metrics.py | models.py | content.py (tags, cold start, hybrid)
-scripts/      pull_from_dumps.py | pull_tags.py | run_experiment.py | tune.py | cold_start.py | hybrid.py
-              make_figures.py | make_deploy_artifacts.py | pull_from_bigquery.py | make_synthetic_data.py
-notebooks/    01_eda.ipynb
-sql/          pull_sample.sql
-app/          streamlit_app.py | requirements.txt | data/ (deploy artifacts)
-tests/        test_metrics.py | test_content.py
-```
-
-## Next steps
-LightFM models, FAISS retrieval, diversity/novelty metrics, online (A/B-style) evaluation.

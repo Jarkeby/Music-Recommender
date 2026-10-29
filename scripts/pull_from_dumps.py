@@ -1,6 +1,6 @@
 """Download recent ListenBrainz daily incremental dumps (Parquet) -- no GCP account needed.
 
-Alternative to pull_from_bigquery.py. Each daily "spark" incremental dump is a ~175 MB tar
+Each daily "spark" incremental dump is a ~175 MB tar
 holding Parquet files of the listens submitted that day. Usage:
     python scripts/pull_from_dumps.py --days 14
 Outputs:
