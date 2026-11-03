@@ -1,6 +1,4 @@
-"""README charts from the results CSVs: model comparison and cold-start.
-    python scripts/make_figures.py
-"""
+
 from pathlib import Path
 
 import matplotlib.pyplot as plt

@@ -1,4 +1,4 @@
-"""Ranking metrics. Write tests for these first -- bugs here silently ruin everything."""
+
 import numpy as np
 import pandas as pd
 
@@ -20,7 +20,7 @@ def ndcg_at_k(recommended, relevant: set, k: int) -> float:
 
 
 def sample_users(test_items: dict, max_users: int | None = None, seed: int = 0) -> list:
-    """The users to evaluate on. Fixed seed so every model is scored on the same users."""
+    # The users to evaluate on. Fixed seed so every model is scored on the same users
     users = list(test_items)
     if max_users and len(users) > max_users:
         users = [int(u) for u in np.random.default_rng(seed).choice(users, max_users, replace=False)]
@@ -28,7 +28,7 @@ def sample_users(test_items: dict, max_users: int | None = None, seed: int = 0) 
 
 
 def per_user_scores(recommender, test_items: dict, k: int = 20, users=None, batch_size: int = 1000) -> pd.DataFrame:
-    """recall@k and NDCG@k for each user (one row per user), for breakdowns by user group."""
+    # recall@k and NDCG@k for each user (one row per user), for breakdowns by user group
     users = list(test_items) if users is None else list(users)
     if hasattr(recommender, "recommend_batch"):
         recs = []
@@ -44,15 +44,14 @@ def per_user_scores(recommender, test_items: dict, k: int = 20, users=None, batc
 
 
 def summary_row(scores: pd.DataFrame, k: int, **extra) -> dict:
-    """One results-table row (mean recall/NDCG over users) from per_user_scores output."""
+    # One results-table row (mean recall/NDCG over users) from per_user_scores output
     return {**extra, f"recall@{k}": scores.recall.mean(), f"ndcg@{k}": scores.ndcg.mean(), "n_users": len(scores)}
 
 
 def activity_breakdown(per_user: pd.DataFrame, train_matrix, k: int) -> pd.DataFrame:
-    """Mean recall/NDCG per model within user-activity quartiles (distinct tracks in train).
-
-    per_user: per_user_scores output for all models stacked, with a `model` column.
-    """
+    # Mean recall/NDCG per model within user-activity quartiles (distinct tracks in train).
+    # per_user: per_user_scores output for all models stacked, with a `model` column.
+    
     activity = np.diff(train_matrix.indptr)  # distinct tracks per user in train
     per_user = per_user.assign(activity=activity[per_user.user_idx.to_numpy()])
     users = per_user.drop_duplicates("user_idx")
@@ -66,6 +65,6 @@ def activity_breakdown(per_user: pd.DataFrame, train_matrix, k: int) -> pd.DataF
 
 
 def evaluate(recommender, test_items: dict, k: int = 20, max_users: int | None = None) -> dict:
-    """Average recall@k and NDCG@k over users with test items."""
+    # Average recall@k and NDCG@k over users with test items
     scores = per_user_scores(recommender, test_items, k, sample_users(test_items, max_users))
     return summary_row(scores, k)

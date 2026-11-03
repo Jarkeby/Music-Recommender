@@ -1,15 +1,4 @@
-"""Pull MusicBrainz tags for every track in the catalog via the ListenBrainz metadata API.
 
-track_id is a MusicBrainz recording MBID, so one batched request returns up to ~100 recordings'
-tags at three levels: the recording itself, its artist(s), and its release group (album).
-Recording tags are sparse; artist tags cover most tracks, so we keep all three and let the
-content model decide how to weight them. Usage:
-    python scripts/pull_tags.py
-Output:
-    data/raw/track_tags.parquet  track_id | source (recording/artist/release_group) | tag | count
-Raw responses are appended to data/raw/tags_cache.jsonl so an interrupted run resumes where it
-stopped. ~900 requests for 90k tracks, roughly 30-40 minutes under the API rate limit.
-"""
 import argparse
 import json
 import time

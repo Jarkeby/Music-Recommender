@@ -1,9 +1,4 @@
-"""Run all models on the same split and print/save a comparison table.
 
-    python scripts/run_experiment.py --data data/raw/listens.parquet --k 20 --save-artifacts
-Hyperparameter defaults are the best settings found by scripts/tune.py (validation split).
-Outputs: results/results.csv, results/by_activity.csv, results/figures/recall_by_activity.png
-"""
 import argparse
 import os
 import sys

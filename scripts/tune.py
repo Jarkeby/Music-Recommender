@@ -1,13 +1,4 @@
-"""Grid-search hyperparameters on a VALIDATION split, logging every run.
 
-The test period (last 20% of the timeline) is never touched here. Instead the training
-period is split again by time: its first 80% trains, its last 20% validates. Pick the best
-settings from the log, then report them once on the test set with run_experiment.py.
-
-    python scripts/tune.py                 # all models
-    python scripts/tune.py --models als    # just ALS
-Every run is appended to results/tuning_log.csv.
-"""
 import argparse
 import itertools
 import json

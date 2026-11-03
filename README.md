@@ -1,8 +1,5 @@
 # Music Recommender
 
-> A recommender built on open ListenBrainz listening data: tuned ALS reaches **0.066 NDCG@20, ~26x a popularity baseline**,
-> and a tag-based cold-start model recovers brand-new tracks with **37x the recall of random**.
-
 **Demo:** https://music-recommender-jarkeby.streamlit.app/
 
 ## Problem
@@ -26,15 +23,9 @@ Given a user's listening history, recommend tracks they haven't heard yet and ar
 | Tags -> ALS | Linear map from tag vectors to ALS item factors, so tracks with no plays still get an embedding |
 | Hybrid | `w * ALS + (1-w) * content` score blend |
 
-**Evaluation:** time-based split (train on first 80% of the timeline, test on last 20%), measuring recall@20 and NDCG@20 on *new* tracks only, to avoid leakage.
-Test set = listens after 22 Oct 2026 08:38 UTC, 5,000 sampled users, same users for every model.
-Hyperparameters and the hybrid weight were chosen on a separate validation split, never on the test set.
-
 ## Results
 
 ### Collaborative models
-![Model comparison](results/figures/model_comparison.png)
-
 | Model | Recall@20 | NDCG@20 |
 |---|---|---|
 | Popularity | 0.0024 | 0.0025 |
@@ -46,8 +37,6 @@ ALS is **~26x popularity** and ~7% better than Item-KNN on NDCG@20 (results/resu
 
 ### Cold start: recommending tracks with zero plays
 10% of tracks are made "cold" (all their training plays removed). Each user ranks only the cold tracks and is scored on the cold tracks they first played in the test period.
-
-![Cold start](results/figures/cold_start.png)
 
 | Model | Recall@20 | NDCG@20 |
 |---|---|---|
@@ -67,17 +56,6 @@ Blend weight 0.9 on ALS was best on validation (results/hybrid_tuning.csv).
 | Content only | 0.0309 | 0.0262 |
 | Hybrid (w=0.9) | 0.0763 | 0.0663 |
 
-**Honest read:** on warm tracks the hybrid is a wash (+0.6% NDCG, equal recall, well within sampling noise). Tags add little when
-there are plenty of plays; their value is cold start, where nothing else works. The blend helps the heaviest users slightly
-(NDCG 0.0767 -> 0.0776) and slightly hurts the lightest on recall (results/hybrid_by_activity.csv).
-
-### By user activity
-![Recall by user activity](results/figures/recall_by_activity.png)
-
-Quartiles of distinct tracks played in train (~1,250 users each), table in results/by_activity.csv.
-Recall is **roughly flat across activity levels** (ALS 0.069-0.089): light users are served about as well as heavy ones.
-The ranking ALS > Item-KNN > BPR >> popularity holds in every quartile.
-
 ### Hyperparameter tuning (scripts/tune.py, results/tuning_log.csv)
 The training period is split again by time (first 80% fit, last 20% validate), so tuning never sees the test period.
 Tuned first on an earlier 14-day pull (106 runs), then re-checked with 80 runs on the final 11-25 Oct window.
@@ -87,15 +65,6 @@ Tuned first on an earlier 14-day pull (106 runs), then re-checked with 80 runs o
 - **Item-KNN prefers binary input** (alpha=0) and many neighbours: repeat plays mostly add noise for item similarity.
 - **BPR underperformed ALS** at every setting tried and was ~10x slower to train.
 - Tuning gave ALS about **+38% NDCG** over defaults (measured on the first window: 0.0500 -> 0.0691).
-
-### EDA highlights (notebooks/01_eda.ipynb)
-![Track popularity long tail](results/figures/long_tail.png)
-
-_EDA numbers are from the first 14-day pull (30 Sep - 16 Oct); the shape is the same on the final window._
-- Heavy-tailed users: median 172 listens/user over ~2 weeks; the top 1% of users produce 19.3% of listens.
-- Extreme popularity skew: the top 0.1% of tracks get 27.4% of listens; 63.9% of tracks are played only once.
-- The head is a single fandom: BTS-related tracks are 16.9% of all listens but come from only ~4% of users,
-  which is why the popularity baseline is so weak here (it recommends BTS to everyone).
 
 ## Analysis / what I learned
 - **Popularity is a weak baseline here** because the head of the distribution is one fandom (BTS, 16.9% of listens

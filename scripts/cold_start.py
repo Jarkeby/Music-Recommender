@@ -1,11 +1,4 @@
-"""Cold-start experiment: can tags recommend tracks that have no plays at all?
 
-A random 10% of tracks are made "cold": every one of their training plays is removed, so the
-collaborative models know nothing about them. Each user is then asked to rank the cold tracks,
-and is scored against the cold tracks they actually played (for the first time) in the test period.
-    python scripts/cold_start.py
-Needs data/raw/track_tags.parquet (scripts/pull_tags.py). Output: results/cold_start.csv
-"""
 import argparse
 import os
 import sys
@@ -25,7 +18,7 @@ from recsys.models import ALSRecommender  # noqa: E402
 
 
 class RandomRecommender:
-    """Baseline: any k cold tracks. With no plays to go on, this is what's left without content."""
+    # Baseline: any k cold tracks. With no plays to go on, this is what's left without content
 
     name = "random"
 

@@ -1,4 +1,4 @@
-"""Loading, filtering, splitting, and matrix building."""
+
 from dataclasses import dataclass
 
 import numpy as np
@@ -7,14 +7,14 @@ import scipy.sparse as sp
 
 
 def load_listens(path: str) -> pd.DataFrame:
-    """Expects columns: user_id, track_id, listened_at."""
+    # Expects columns: user_id, track_id, listened_at
     df = pd.read_parquet(path)
     df["listened_at"] = pd.to_datetime(df["listened_at"])
     return df[["user_id", "track_id", "listened_at"]].dropna()
 
 
 def filter_sparse(df: pd.DataFrame, min_user: int = 20, min_track: int = 20, n_iter: int = 3) -> pd.DataFrame:
-    """Drop users/tracks with too few listens. Repeats because filtering one affects the other."""
+    # Drop users/tracks with too few listens. Repeats because filtering one affects the other.
     for _ in range(n_iter):
         df = df[df.groupby("user_id")["track_id"].transform("size") >= min_user]
         df = df[df.groupby("track_id")["user_id"].transform("size") >= min_track]
@@ -22,10 +22,10 @@ def filter_sparse(df: pd.DataFrame, min_user: int = 20, min_track: int = 20, n_i
 
 
 def time_split(df: pd.DataFrame, test_frac: float = 0.2):
-    """Train on the earliest (1 - test_frac) of listens, test on the latest.
+    # Train on the earliest (1 - test_frac) of listens, test on the latest.
 
-    Time-based splitting avoids leakage: the model never sees the future.
-    """
+    # Time-based splitting avoids leakage: the model never sees the future.
+    
     cutoff = df["listened_at"].quantile(1 - test_frac)
     return df[df["listened_at"] < cutoff].copy(), df[df["listened_at"] >= cutoff].copy()
 
@@ -39,12 +39,12 @@ class Dataset:
 
 
 def build_dataset(train: pd.DataFrame, test: pd.DataFrame, alpha: float = 10.0) -> Dataset:
-    """Build index maps from TRAIN only, then a sparse matrix and test ground truth.
+    # Build index maps from TRAIN only, then a sparse matrix and test ground truth.
 
-    Confidence = 1 + alpha * log1p(play_count)  (a common implicit-feedback weighting).
-    Test only counts users/tracks seen in training (warm-start evaluation), and only
-    tracks the user had NOT already played in train (we recommend *new* music).
-    """
+    # Confidence = 1 + alpha * log1p(play_count)  (a common implicit-feedback weighting).
+    # Test only counts users/tracks seen in training (warm-start evaluation), and only
+    # tracks the user had NOT already played in train (we recommend *new* music).
+    
     user_ids = train["user_id"].astype("category").cat.categories.to_numpy()
     track_ids = train["track_id"].astype("category").cat.categories.to_numpy()
     u_map = {u: i for i, u in enumerate(user_ids)}

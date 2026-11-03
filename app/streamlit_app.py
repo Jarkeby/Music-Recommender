@@ -1,14 +1,4 @@
-"""Demo: pick tracks or artists you like, get recommendations from ALS item embeddings.
 
-Run after `run_experiment.py --save-artifacts`:
-    streamlit run app/streamlit_app.py
-
-Artists have no embedding of their own, so each one is the popularity-weighted average of its
-tracks' embeddings; similar artists are the nearest neighbours of that vector.
-
-TODO (nice upgrades): use FAISS for big catalogs, add a cold-start path using tag features.
-Deployed copy uses app/data (int8-quantized embeddings in shards); see scripts/make_deploy_artifacts.py.
-"""
 import re
 from pathlib import Path
 from urllib.parse import quote
@@ -65,6 +55,9 @@ def load():
         artists["credits"] = [[c.strip() for c in CREDIT_SPLIT.split(n)] for n in artists["lowered"]]
         is_multi = np.array([len(c) > 1 for c in artists["credits"]])  # looks like a collab (or a duo/band with "&")
         artists["weight"] = np.where(is_multi, np.minimum(1.0, artists["n_tracks"] / COLLAB_FULL_TRACKS), 1.0)
+        links_path = ROOT / "app/data/artist_links.parquet"  # scripts/pull_artist_links.py; covers the top artists
+        direct = pd.read_parquet(links_path).set_index("artist_name")["spotify_url"] if links_path.exists() else {}
+        artists["spotify"] = [direct.get(n) or f"https://open.spotify.com/search/{quote(n)}/artists" for n in artists["name"]]
     return norm, tracks, track_order, tracks["label"].str.lower(), artists, artist_vectors
 
 
@@ -141,7 +134,7 @@ if tab_rest:
                     "Artist": names,
                     "Similarity": scores[top].round(3),
                     "Tracks in catalog": artists["n_tracks"].to_numpy()[top],
-                    "Spotify": [f"https://open.spotify.com/search/{quote(n)}/artists" for n in names],
+                    "Spotify": artists["spotify"].to_numpy()[top],
                 }),
                 column_config={"Spotify": st.column_config.LinkColumn("Spotify", display_text="Open")},
                 hide_index=True,

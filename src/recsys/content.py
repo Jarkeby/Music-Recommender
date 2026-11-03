@@ -1,8 +1,4 @@
-"""Content features from tags, and the recommenders that use them (cold start + hybrid).
 
-Same interface as models.py: fit(train_matrix), then recommend_batch(user_idxs, k). Each also has
-score(user_idxs) -> dense users x tracks matrix, so scores can be blended.
-"""
 import numpy as np
 import pandas as pd
 import scipy.sparse as sp
@@ -14,11 +10,10 @@ SOURCE_WEIGHTS = {"recording": 1.0, "release_group": 0.7, "artist": 0.5}
 
 def build_tag_matrix(tags: pd.DataFrame, track_ids, min_tracks: int = 5, max_tags: int = 5000,
                      source_weights: dict = SOURCE_WEIGHTS):
-    """tracks x tags TF-IDF matrix (rows L2-normalized; untagged tracks are all-zero rows).
-
-    tags: track_id | source | tag | count (from scripts/pull_tags.py). A tag's weight on a track is
-    sum over sources of source_weight * log1p(count), then multiplied by the tag's IDF.
-    """
+    # tracks x tags TF-IDF matrix (rows L2-normalized; untagged tracks are all-zero rows).
+    # tags: track_id | source | tag | count (from scripts/pull_tags.py). A tag's weight on a track is
+    # sum over sources of source_weight * log1p(count), then multiplied by the tag's IDF.
+    
     t_map = pd.Series(np.arange(len(track_ids)), index=track_ids)
     tags = tags[tags.track_id.isin(t_map.index)]
     tags = tags.assign(w=tags.source.map(source_weights) * np.log1p(tags["count"]))
@@ -37,7 +32,7 @@ def build_tag_matrix(tags: pd.DataFrame, track_ids, min_tracks: int = 5, max_tag
 
 
 def _top_k(scores: np.ndarray, k: int, exclude: sp.csr_matrix | None = None, candidates=None):
-    """Top-k column indices per row, skipping excluded (already played) and non-candidate items."""
+    # Top-k column indices per row, skipping excluded (already played) and non-candidate items
     scores = scores.copy()
     if exclude is not None:
         r, c = exclude.nonzero()
@@ -52,7 +47,7 @@ def _top_k(scores: np.ndarray, k: int, exclude: sp.csr_matrix | None = None, can
 
 
 class _Scorer:
-    """recommend_batch on top of score(); `candidates` restricts what can be recommended."""
+    # recommend_batch on top of score(); `candidates` restricts what can be recommended
 
     candidates = None
 
@@ -65,10 +60,8 @@ class _Scorer:
 
 
 class ContentRecommender(_Scorer):
-    """User profile = play-weighted average of the tag vectors of their tracks; score = cosine to it.
-
-    Needs no plays of the candidate track, so it works for tracks the model has never seen.
-    """
+    # User profile = play-weighted average of the tag vectors of their tracks; score = cosine to it.
+    # Needs no plays of the candidate track, so it works for tracks the model has never seen.
 
     name = "content"
 
@@ -85,8 +78,8 @@ class ContentRecommender(_Scorer):
 
 
 class TagToALSRecommender(_Scorer):
-    """Cold start through the ALS space: learn a linear map tags -> ALS item factors on warm tracks
-    (ridge regression), predict factors for cold tracks, then score them with ALS user factors."""
+    # Cold start through the ALS space: learn a linear map tags -> ALS item factors on warm tracks
+    # (ridge regression), predict factors for cold tracks, then score them with ALS user factors
 
     name = "tag_to_als"
 
@@ -108,12 +101,12 @@ class TagToALSRecommender(_Scorer):
 
 
 def _standardize(s: np.ndarray) -> np.ndarray:
-    """Per-user z-score, so ALS and content scores are on the same scale before blending."""
+    # Per-user z-score, so ALS and content scores are on the same scale before blending
     return (s - s.mean(axis=1, keepdims=True)) / (s.std(axis=1, keepdims=True) + 1e-9)
 
 
 class HybridRecommender(_Scorer):
-    """weight * z(ALS score) + (1 - weight) * z(content score). Both models must already be fit."""
+    # weight * z(ALS score) + (1 - weight) * z(content score). Both models must already be fit.
 
     name = "hybrid"
 

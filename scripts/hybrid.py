@@ -1,11 +1,4 @@
-"""Hybrid: blend ALS and tag-content scores, weight * z(ALS) + (1 - weight) * z(content).
 
-The blend weight is chosen on the VALIDATION split (same scheme as tune.py), then ALS, content,
-and the hybrid at that weight are each scored once on the test set.
-    python scripts/hybrid.py
-Needs data/raw/track_tags.parquet (scripts/pull_tags.py).
-Outputs: results/hybrid_tuning.csv, results/hybrid.csv, results/hybrid_by_activity.csv
-"""
 import argparse
 import os
 import sys

@@ -1,11 +1,4 @@
-"""Shrink the app's artifacts so they fit in a GitHub repo (100 MB/file limit) for Streamlit Cloud.
 
-The full ALS item factors are 90k x 1024 float32 (~370 MB). The app only needs cosine similarity, so the
-unit-normalized vectors are quantized to int8 (scale 127; ~4x smaller, near-identical neighbours) and split
-into shards. (PCA to fewer dimensions was tried first and wrecked the neighbours, so all 1024 dims are kept.)
-    python scripts/make_deploy_artifacts.py
-Reads data/processed/{item_factors.npy,tracks.parquet}; writes app/data/. Run after run_experiment.py --save-artifacts.
-"""
 import argparse
 from pathlib import Path
 

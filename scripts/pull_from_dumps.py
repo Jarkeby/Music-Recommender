@@ -1,17 +1,4 @@
-"""Download recent ListenBrainz daily incremental dumps (Parquet) -- no GCP account needed.
 
-Each daily "spark" incremental dump is a ~175 MB tar
-holding Parquet files of the listens submitted that day. Usage:
-    python scripts/pull_from_dumps.py --days 14
-Outputs:
-    data/raw/listens.parquet     user_id | track_id | listened_at   (what the pipeline expects)
-    data/raw/track_meta.parquet  track_id | artist_name | recording_name   (for the app)
-Downloaded tars are cached in data/raw/dumps/ so re-runs don't re-download.
-
-Note: dumps contain everything *submitted* that day, including users importing years of old
-history (e.g. from Last.fm). We keep only listens whose timestamp falls inside the dump window,
-so the time-based train/test split reflects real, current listening.
-"""
 import argparse
 import re
 import tarfile

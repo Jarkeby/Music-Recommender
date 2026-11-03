@@ -1,12 +1,9 @@
-"""Recommenders share one interface: fit(train_matrix) then recommend(user_idx, k) -> list of track idx.
 
-Add your own (BPR, content-based, hybrid, ...) by following the same pattern.
-"""
 import numpy as np
 
 
 class PopularityRecommender:
-    """Recommend the most-played tracks the user hasn't heard. Hard to beat -- always include it."""
+    # Recommend the most-played tracks the user hasn't heard. Hard to beat -- always include it
 
     name = "popularity"
 
@@ -27,7 +24,7 @@ class PopularityRecommender:
 
 
 class _ImplicitWrapper:
-    """Shared logic for models from the `implicit` library."""
+    # Shared logic for models from the `implicit` library
 
     def _recommend(self, user_idx: int, k: int):
         ids, _ = self.model.recommend(user_idx, self.train[user_idx], N=k, filter_already_liked_items=True)
@@ -37,14 +34,14 @@ class _ImplicitWrapper:
         return self._recommend(user_idx, k)
 
     def recommend_batch(self, user_idxs, k: int):
-        """Recommend for many users in one call (much faster than looping for evaluation)."""
+        # Recommend for many users in one call (much faster than looping for evaluation).
         user_idxs = np.asarray(user_idxs)
         ids, _ = self.model.recommend(user_idxs, self.train[user_idxs], N=k, filter_already_liked_items=True)
         return [[int(i) for i in row] for row in ids]
 
 
 class ItemKNNRecommender(_ImplicitWrapper):
-    """Item-item cosine similarity: 'people who played X also played Y'."""
+    # Item-item cosine similarity: 'people who played X also played Y
 
     name = "item_knn"
 
@@ -60,7 +57,7 @@ class ItemKNNRecommender(_ImplicitWrapper):
 
 
 class ALSRecommender(_ImplicitWrapper):
-    """Matrix factorization via alternating least squares (implicit feedback)."""
+    # Matrix factorization via alternating least squares (implicit feedback).
 
     name = "als"
 
@@ -89,11 +86,9 @@ class ALSRecommender(_ImplicitWrapper):
 
 
 class BPRRecommender(_ImplicitWrapper):
-    """Bayesian Personalized Ranking: learns embeddings by ranking played tracks above unplayed ones.
-
-    Unlike ALS it ignores play counts (any play = positive) and optimizes ranking directly.
-    """
-
+    # Bayesian Personalized Ranking: learns embeddings by ranking played tracks above unplayed ones.
+    # Unlike ALS it ignores play counts (any play = positive) and optimizes ranking directly.
+    
     name = "bpr"
 
     def __init__(self, factors: int = 64, learning_rate: float = 0.01, regularization: float = 0.01,

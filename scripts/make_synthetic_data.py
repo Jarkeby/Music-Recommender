@@ -1,9 +1,4 @@
-"""Generate fake listening data so you can test the pipeline BEFORE getting real data.
 
-Users belong to hidden taste clusters; each cluster prefers a subset of tracks, plus a
-global popularity skew. A decent model should beat the popularity baseline on this.
-    python scripts/make_synthetic_data.py   # writes data/raw/synthetic.parquet; pass --data to the scripts
-"""
 import argparse
 from pathlib import Path
 import numpy as np
