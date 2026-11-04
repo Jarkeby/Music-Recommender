@@ -62,9 +62,9 @@ def main():
     mbid_cache_path, link_cache_path = cache_dir / "artist_mbids.jsonl", cache_dir / "artist_spotify.jsonl"
     mbids, links = read_cache(mbid_cache_path), read_cache(link_cache_path)  # artist_name -> mbid|None, mbid -> url|None
 
-    # step 1: recording -> artist MBID (100 per request); single-artist credits only, matched by name
+    # recording -> artist MBID 
     todo = artists[~artists.artist_name.isin(mbids)]
-    print(f"{len(artists):,} artists; step 1 (MBIDs): {len(todo):,} to look up")
+    print(f"{len(artists):,} artists; {len(todo):,} MBIDs to look up")
     with mbid_cache_path.open("a", encoding="utf-8") as f:
         for b in range(0, len(todo), 100):
             batch = todo.iloc[b:b + 100]
@@ -77,10 +77,10 @@ def main():
             f.flush()
             time.sleep(0.5)
 
-    # step 2: artist MBID -> Spotify URL (MusicBrainz allows 1 request/second)
+    # artist MBID -> Spotify URL (only 1 per sec)
     wanted = [m for m in dict.fromkeys(mbids[a] for a in artists.artist_name) if m]
     todo = [m for m in wanted if m not in links]
-    print(f"step 2 (Spotify links): {len(todo):,} to look up, ~{len(todo) / 60:.0f} min")
+    print(f"{len(todo):,} Spotify links to look up, ~{len(todo) / 60:.0f} min")
     start = time.time()
     with link_cache_path.open("a", encoding="utf-8") as f:
         for i, m in enumerate(todo, 1):
